@@ -30,11 +30,11 @@ const (
 )
 
 var (
-	btcdHomeDir        = btcutil.AppDataDir("btcd", false)
+	pointcoindHomeDir        = btcutil.AppDataDir("pointcoind", false)
 	bsHomeDir          = btcutil.AppDataDir("blocksafari", false)
 	cfg                *config
 	defaultConfigFile  = filepath.Join(bsHomeDir, defaultConfigFilename)
-	defaultRPCCertFile = filepath.Join(btcdHomeDir, "rpc.cert")
+	defaultRPCCertFile = filepath.Join(pointcoindHomeDir, "rpc.cert")
 
 	pem []byte
 )
