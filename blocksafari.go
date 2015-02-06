@@ -14,7 +14,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/PointCoin/btcd/wire"
+	"github.com/PointCoin/btcwire"
 	"github.com/PointCoin/btcjson"
 	"github.com/PointCoin/btcrpcclient"
 	"github.com/davecgh/go-spew/spew"
