@@ -1,14 +1,14 @@
 blocksafari
 ===========
 
-blocksafari is a web-based frontend to the blockchain in [btcd](https://github.com/btcsuite/btcd).
+blocksafari is a web-based frontend to the blockchain in [btcd](https://github.com/PointCoin/btcd).
 
 **blocksafari is proof-of-concept code from our early work with
   btcd.**
 
 **This code is not suitable for production use and requires major
   refactoring and rewriting to bring it up to speed with current
-  proper usage of btcsuite packages and conventions.**
+  proper usage of PointCoin packages and conventions.**
 
 ## Installation
 
@@ -18,10 +18,10 @@ blocksafari is a web-based frontend to the blockchain in [btcd](https://github.c
   http://golang.org/doc/install
 
 - Run the following command to obtain blocksafari, all dependencies, and install it:
-  ```$ go get github.com/btcsuite/blocksafari```
+  ```$ go get github.com/PointCoin/blocksafari```
 
 - Enter the source directory
-  ```cd $GOPATH/src/github.com/btcsuite/blocksafari```
+  ```cd $GOPATH/src/github.com/PointCoin/blocksafari```
 
 - Copy sample-blocksafari.conf to blocksafari.conf and edit the options.
 
@@ -33,7 +33,7 @@ blocksafari is a web-based frontend to the blockchain in [btcd](https://github.c
 #### Build from Source
 
 - Run the following command to update blocksafari, all dependencies, and install it:
-  ```$ go get -u -v github.com/btcsuite/blocksafari/...```
+  ```$ go get -u -v github.com/PointCoin/blocksafari/...```
 
 ## License
 

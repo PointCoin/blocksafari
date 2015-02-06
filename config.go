@@ -9,8 +9,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/btcsuite/btcutil"
-	"github.com/btcsuite/go-flags"
+	"github.com/PointCoin/btcutil"
+	"github.com/PointCoin/go-flags"
 )
 
 // config defines the configuration options for blocksafari.

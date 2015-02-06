@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/btcsuite/btcjson"
+	"github.com/PointCoin/btcjson"
 )
 
 var (
