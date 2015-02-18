@@ -14,14 +14,14 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/PointCoin/btcwire"
 	"github.com/PointCoin/btcjson"
 	"github.com/PointCoin/btcrpcclient"
+	"github.com/PointCoin/btcwire"
 	"github.com/davecgh/go-spew/spew"
 )
 
 const (
-	numMainPageBlocks = 20 // number of blocks to display on main page
+	numMainPageBlocks = 30 // number of blocks to display on main page
 )
 
 var (

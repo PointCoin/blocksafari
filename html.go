@@ -5,6 +5,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -33,13 +34,14 @@ type displayBlockPage struct {
 }
 
 type displayMainPage struct {
-	DisplayHash string
-	Hash        string
-	Height      int64
-	Size        string
-	Timestamp   string
-	Txs         int
-	TotalBTC    string
+	DisplayHash     string
+	Hash            string
+	Height          int64
+	Size            string
+	Timestamp       string
+	Txs             int
+	TotalBTC        string
+	CoinbaseMessage string
 }
 
 type displayTxPage struct {
@@ -129,21 +131,40 @@ func printMainBlock(w http.ResponseWriter, blocks []*btcjson.BlockResult) {
 	display := make([]displayMainPage, len(blocks))
 	for i, block := range blocks {
 		var totalBtc float64
+
+		// Get the coinbase transaction
+		coinbaseTx := block.RawTx[0]
+		b, err := hex.DecodeString(coinbaseTx.Vin[0].Coinbase)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		var msg string
+		// Set the CoinbaseMessage
+		if len(b) > 9 {
+			msg = string(b[9:])
+		} else {
+			msg = string(b)
+		}
+
 		for _, tx := range block.RawTx {
+
 			for _, v := range tx.Vout {
+
 				totalBtc += v.Value
 			}
 		}
 		tmpTime := time.Unix(block.Time, 0)
 
 		display[i] = displayMainPage{
-			DisplayHash: fmt.Sprintf("%s", strings.TrimLeft(block.Hash, "0"))[:10],
-			Hash:        block.Hash,
-			Height:      block.Height,
-			Size:        fmt.Sprintf("%0.3f", float64(block.Size)/1000.00),
-			Timestamp:   fmt.Sprintf("%s", tmpTime.String()[:19]),
-			Txs:         len(block.RawTx),
-			TotalBTC:    fmt.Sprintf("%.8f", totalBtc),
+			DisplayHash:     fmt.Sprintf("%s", strings.TrimLeft(block.Hash, "0"))[:10],
+			Hash:            block.Hash,
+			Height:          block.Height,
+			Size:            fmt.Sprintf("%0.3f", float64(block.Size)/1000.00),
+			Timestamp:       fmt.Sprintf("%s", tmpTime.String()[:19]),
+			Txs:             len(block.RawTx),
+			TotalBTC:        fmt.Sprintf("%.8f", totalBtc),
+			CoinbaseMessage: msg,
 		}
 	}
 
