@@ -20,17 +20,18 @@ var (
 )
 
 type displayBlockPage struct {
-	Bits         string
-	Difficulty   string
-	Hash         string
-	Height       int64
-	MerkleRoot   string
-	NextHash     string
-	Nonce        uint32
-	PreviousHash string
-	Size         string
-	Timestamp    string
-	Txs          []blockPageTx
+	Bits            string
+	Difficulty      string
+	Hash            string
+	Height          int64
+	MerkleRoot      string
+	NextHash        string
+	Nonce           uint32
+	PreviousHash    string
+	Size            string
+	Timestamp       string
+	Txs             []blockPageTx
+	CoinbaseMessage string
 }
 
 type displayMainPage struct {
@@ -75,18 +76,21 @@ func printBlock(w http.ResponseWriter, block *btcjson.BlockResult, trans []btcjs
 		}
 	}
 
+	msg := getCoinbaseMsg(block.RawTx[0])
+
 	b := &displayBlockPage{
-		Bits:         block.Bits,
-		Difficulty:   fmt.Sprintf("%f", block.Difficulty),
-		Hash:         block.Hash,
-		Height:       block.Height,
-		MerkleRoot:   block.MerkleRoot,
-		NextHash:     block.NextHash,
-		Nonce:        block.Nonce,
-		PreviousHash: block.PreviousHash,
-		Size:         fmt.Sprintf("%0.3f", float64(block.Size)/1000.00),
-		Timestamp:    fmt.Sprintf("%s", tmpTime.String()[:19]),
-		Txs:          txs,
+		Bits:            block.Bits,
+		Difficulty:      fmt.Sprintf("%f", block.Difficulty),
+		Hash:            block.Hash,
+		Height:          block.Height,
+		MerkleRoot:      block.MerkleRoot,
+		NextHash:        block.NextHash,
+		Nonce:           block.Nonce,
+		PreviousHash:    block.PreviousHash,
+		Size:            fmt.Sprintf("%0.3f", float64(block.Size)/1000.00),
+		Timestamp:       fmt.Sprintf("%s", tmpTime.String()[:19]),
+		Txs:             txs,
+		CoinbaseMessage: msg,
 	}
 	err := templates.ExecuteTemplate(w, "block.html", b)
 	if err != nil {
@@ -127,25 +131,29 @@ func printHTMLHeader(w http.ResponseWriter, title string) {
 	}
 }
 
+func getCoinbaseMsg(coinbaseTx btcjson.TxRawResult) string {
+	b, err := hex.DecodeString(coinbaseTx.Vin[0].Coinbase)
+	if err != nil {
+		b = []byte("ERROR")
+	}
+
+	var msg string
+	// Set the CoinbaseMessage
+	if len(b) > 9 {
+		msg = string(b[9:])
+	} else {
+		msg = string(b)
+	}
+	return msg
+}
+
 func printMainBlock(w http.ResponseWriter, blocks []*btcjson.BlockResult) {
 	display := make([]displayMainPage, len(blocks))
 	for i, block := range blocks {
 		var totalBtc float64
 
 		// Get the coinbase transaction
-		coinbaseTx := block.RawTx[0]
-		b, err := hex.DecodeString(coinbaseTx.Vin[0].Coinbase)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
-		var msg string
-		// Set the CoinbaseMessage
-		if len(b) > 9 {
-			msg = string(b[9:])
-		} else {
-			msg = string(b)
-		}
+		msg := getCoinbaseMsg(block.RawTx[0])
 
 		for _, tx := range block.RawTx {
 
