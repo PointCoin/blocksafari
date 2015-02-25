@@ -1,0 +1,20 @@
+<section class="row banner">
+	<p>
+		This site is written in <a href="http://www.golang.org">Go</a>.
+		It uses JSON to fetch and parse this data from
+		<a href="https://github.com/PointCoin/pointcoind">pointcoind</a> on-demand.
+	</p>
+</section>
+<section class="row">
+<table class="responsive" cellpadding="3" cellspacing="0" width="100%">
+<tr>
+	<th>Name</th>
+	<th>Number</th>
+</tr>
+{{range .}}
+<tr>
+        <td>{{.Name}}</td>
+        <td>{{.Number}}</td>
+</tr>
+{{end}}
+</table>
