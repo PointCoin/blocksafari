@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"strconv"
+	"sort"
 
 	"github.com/PointCoin/btcjson"
 )
@@ -43,6 +45,11 @@ type displayMainPage struct {
 	Txs             int
 	TotalBTC        string
 	CoinbaseMessage string
+}
+
+type ScoreItem struct {
+Name string
+Number int
 }
 
 type displayTxPage struct {
@@ -145,6 +152,47 @@ func getCoinbaseMsg(coinbaseTx btcjson.TxRawResult) string {
 		msg = string(b)
 	}
 	return msg
+}
+
+type ByNum []ScoreItem
+func (this ByNum) Len() int {
+	return len(this)
+}
+func (this ByNum) Less(i, j int) bool {
+	return this[i].Number > this[j].Number
+}
+func (this ByNum) Swap(i, j int) {
+	this[i], this[j] = this[j], this[i]
+}
+
+func printScores(w http.ResponseWriter, blocks []*btcjson.BlockResult) {
+	var ScoreList []ScoreItem
+	for _, block := range blocks {
+
+		// Get the coinbase transaction
+		flag := 0
+		msg := getCoinbaseMsg(block.RawTx[0])
+		if !strconv.IsPrint(rune(msg[0])) {
+			msg = msg[1:]
+		}
+		for i, entry := range ScoreList {
+			if entry.Name == msg {
+				ScoreList[i].Number++
+				flag = 1
+			}
+		}
+		if flag == 0 {
+			ScoreList = append(ScoreList, ScoreItem{Name:msg, Number:1})
+		}
+	}
+
+	sort.Sort(ByNum(ScoreList))
+
+	err := templates.ExecuteTemplate(w, "scores.html", ScoreList)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	
 }
 
 func printMainBlock(w http.ResponseWriter, blocks []*btcjson.BlockResult) {
