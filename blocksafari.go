@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	numMainPageBlocks = 30 // number of blocks to display on main page
+	numMainPageBlocks = 50 // number of blocks to display on main page
 )
 
 var (
@@ -94,6 +94,35 @@ func handleJS(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "js/"+file[1:])
 }
 
+func handleScores(w http.ResponseWriter, r *http.Request) {
+	sha, err := client.GetBestBlockHash()
+	numBlocks, _ := client.GetBlockCount()
+	if err != nil {
+		printErrorPage(w, "Unable to get best blockhash")
+		return
+	}
+
+	blocks := make([]*btcjson.BlockResult, numBlocks)
+	blocks[0], err = client.GetBlockVerbose(sha, true)
+	if err != nil {
+		printErrorPage(w, "Error retrieving block")
+		return
+	}
+
+	for j := 1; int64(j) < numBlocks && blocks[j-1].PreviousHash != ""; j++ {
+		prevsha, _ := btcwire.NewShaHashFromStr(blocks[j-1].PreviousHash)
+		blocks[j], err = client.GetBlockVerbose(prevsha, true)
+		if err != nil {
+			printErrorPage(w, "Error retrieving block")
+			return
+		}
+	}
+
+	printHTMLHeader(w, "Welcome")
+	printScores(w, blocks)
+	printHTMLFooter(w)
+}
+
 func handleMain(w http.ResponseWriter, r *http.Request) {
 	sha, err := client.GetBestBlockHash()
 	if err != nil {
@@ -108,7 +137,7 @@ func handleMain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for j := 1; j < numMainPageBlocks && blocks[j-1].PreviousHash != ""; j++ {
+	for j := 1; int64(j) < numMainPageBlocks && blocks[j-1].PreviousHash != ""; j++ {
 		prevsha, _ := btcwire.NewShaHashFromStr(blocks[j-1].PreviousHash)
 		blocks[j], err = client.GetBlockVerbose(prevsha, true)
 		if err != nil {
@@ -233,6 +262,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		handleSearch(w, r)
 	case "tx":
 		handleTx(w, r)
+	case "scores":
+		handleScores(w, r)
 	case "":
 		handleMain(w, r)
 	default:
