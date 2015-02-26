@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	numMainPageBlocks = 50 // number of blocks to display on main page
+	numMainPageBlocks = 30 // number of blocks to display on main page
 )
 
 var (
@@ -120,6 +120,38 @@ func handleScores(w http.ResponseWriter, r *http.Request) {
 
 	printHTMLHeader(w, "Welcome")
 	printScores(w, blocks)
+	printHTMLFooter(w)
+}
+
+func handlePager(w http.ResponseWriter, r *http.Request) {
+	h := r.URL.Path[len("/height"):]
+	height, err := strconv.Atoi(h[1:])
+	if err != nil {
+		printErrorPage(w, "Unable to parse block height")
+		return
+	}
+
+	sha, err := client.GetBlockHash(int64(height))
+	if err != nil {
+		printErrorPage(w, "No block found at that height")
+	}
+
+	blocks := make([]*btcjson.BlockResult, numMainPageBlocks)
+	blocks[0], err = client.GetBlockVerbose(sha, true)
+	if err != nil {
+		printErrorPage(w, "Error retrieving block")
+		return
+	}
+	for i := 1; int64(i) < numMainPageBlocks && blocks[i-1].PreviousHash != ""; i++ {
+		prevsha, _ := btcwire.NewShaHashFromStr(blocks[i-1].PreviousHash)
+		blocks[i], err = client.GetBlockVerbose(prevsha, true)
+		if err != nil {
+			printErrorPage(w, "Error retrieving block")
+			return
+		}
+	}
+	printHTMLHeader(w, "Welcome")
+	printBlockPager(w, blocks)
 	printHTMLFooter(w)
 }
 
@@ -264,6 +296,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		handleTx(w, r)
 	case "scores":
 		handleScores(w, r)
+	case "height":
+		handlePager(w, r)
 	case "":
 		handleMain(w, r)
 	default:

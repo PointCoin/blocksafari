@@ -65,3 +65,9 @@ section.footer {
 dl.blockstats dt, dl.blockstats dd {
 	margin-bottom: 0;
 }
+
+a.onward {
+    margin: 10px auto 20px auto; 
+    font-size: 20px;
+    display: block;
+}

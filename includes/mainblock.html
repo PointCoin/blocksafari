@@ -1,8 +1,6 @@
 <section class="row banner">
 	<p>
-		This site is written in <a href="http://www.golang.org">Go</a>.
-		It uses JSON to fetch and parse this data from
-		<a href="https://github.com/PointCoin/pointcoind">pointcoind</a> on-demand.
+    All data is from <a href="https://github.com/PointCoin/pointcoind">pointcoind</a> on-demand. Checkout the <a href="/scores">leaderboard</a>.
 	</p>
 </section>
 <section class="row">
@@ -16,7 +14,7 @@
 	<th>Size (kB)</th>
 	<th>Coinbase Message</th>
 </tr>
-{{range .}}
+{{range .Blocks}}
 <tr>
         <td><a href="/block/{{.Hash}}">{{.Height}}</a></td>
         <td><a href="/block/{{.Hash}}">{{.DisplayHash}}</a></td>
@@ -28,3 +26,4 @@
 </tr>
 {{end}}
 </table>
+<a class="onward" href="/height/{{ .PreviousPage }}">Backward</a>

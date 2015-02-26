@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
-	"sort"
 
 	"github.com/PointCoin/btcjson"
 )
@@ -37,6 +37,12 @@ type displayBlockPage struct {
 }
 
 type displayMainPage struct {
+	Blocks       []blockPager
+	PreviousPage int64
+	NextPage     int64
+}
+
+type blockPager struct {
 	DisplayHash     string
 	Hash            string
 	Height          int64
@@ -48,8 +54,8 @@ type displayMainPage struct {
 }
 
 type ScoreItem struct {
-Name string
-Number int
+	Name   string
+	Number int
 }
 
 type displayTxPage struct {
@@ -155,6 +161,7 @@ func getCoinbaseMsg(coinbaseTx btcjson.TxRawResult) string {
 }
 
 type ByNum []ScoreItem
+
 func (this ByNum) Len() int {
 	return len(this)
 }
@@ -182,7 +189,7 @@ func printScores(w http.ResponseWriter, blocks []*btcjson.BlockResult) {
 			}
 		}
 		if flag == 0 {
-			ScoreList = append(ScoreList, ScoreItem{Name:msg, Number:1})
+			ScoreList = append(ScoreList, ScoreItem{Name: msg, Number: 1})
 		}
 	}
 
@@ -192,11 +199,11 @@ func printScores(w http.ResponseWriter, blocks []*btcjson.BlockResult) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	
+
 }
 
-func printMainBlock(w http.ResponseWriter, blocks []*btcjson.BlockResult) {
-	display := make([]displayMainPage, len(blocks))
+func produceBlockPager(blocks []*btcjson.BlockResult) []blockPager {
+	display := make([]blockPager, len(blocks))
 	for i, block := range blocks {
 		var totalBtc float64
 
@@ -212,22 +219,46 @@ func printMainBlock(w http.ResponseWriter, blocks []*btcjson.BlockResult) {
 		}
 		tmpTime := time.Unix(block.Time, 0)
 
-		display[i] = displayMainPage{
+		display[i] = blockPager{
 			DisplayHash:     fmt.Sprintf("%s", strings.TrimLeft(block.Hash, "0"))[:10],
 			Hash:            block.Hash,
 			Height:          block.Height,
 			Size:            fmt.Sprintf("%0.3f", float64(block.Size)/1000.00),
 			Timestamp:       fmt.Sprintf("%s", tmpTime.String()[:19]),
 			Txs:             len(block.RawTx),
-			TotalBTC:        fmt.Sprintf("%.8f", totalBtc),
+			TotalBTC:        fmt.Sprintf("%.5f", totalBtc),
 			CoinbaseMessage: msg,
 		}
 	}
+	return display
+}
 
-	err := templates.ExecuteTemplate(w, "mainblock.html", display)
+func printBlockPager(w http.ResponseWriter, blocks []*btcjson.BlockResult) {
+
+	display := produceBlockPager(blocks)
+	page := displayMainPage{
+		Blocks:       display,
+		PreviousPage: display[len(display)-1].Height,
+		NextPage:     display[0].Height + 29,
+	}
+	err := templates.ExecuteTemplate(w, "pager.html", page)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func printMainBlock(w http.ResponseWriter, blocks []*btcjson.BlockResult) {
+
+	display := produceBlockPager(blocks)
+	page := displayMainPage{
+		Blocks:       display,
+		PreviousPage: display[len(display)-1].Height,
+	}
+	err := templates.ExecuteTemplate(w, "mainblock.html", page)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
 }
 
 func printTx(w http.ResponseWriter, tx *btcjson.TxRawResult) {
